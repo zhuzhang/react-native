@@ -562,6 +562,7 @@ RCT_CGSTRUCT_CONVERTER(CGAffineTransform, (@[
     enum {
       MODE_RGB = 0,
       MODE_HSB = 1,
+      MODE_PIMG = 2,
     };
     struct {
       union {
@@ -573,7 +574,7 @@ RCT_CGSTRUCT_CONVERTER(CGAffineTransform, (@[
         } hsb;
       };
       double a;
-      unsigned int mode: 1;
+      unsigned int mode: 2;
     } components = {
       .a = 1.0,
       .mode = MODE_RGB,
@@ -607,6 +608,15 @@ RCT_CGSTRUCT_CONVERTER(CGAffineTransform, (@[
       components.hsb.s /= 100.0;
       components.hsb.b /= 100.0;
       components.mode = MODE_HSB;
+    } else if ([colorString hasPrefix:@"!"]) {
+      UIImage *patternImage = [UIImage imageNamed:[colorString substringFromIndex:1]];
+      if (!patternImage) {
+        RCTLogError(@"Invalid pattern image", colorString);
+        components.a = -1;
+      } else {
+        components.mode = MODE_PIMG;
+        color = [UIColor colorWithPatternImage:patternImage];
+      }
     } else {
       RCTLogError(@"Unrecognized color format '%@', must be one of #hex|rgba|rgb or a valid CSS color name.", colorString);
       components.a = -1;
@@ -616,7 +626,7 @@ RCT_CGSTRUCT_CONVERTER(CGAffineTransform, (@[
     } else {
       if (components.mode == MODE_RGB) {
         color = [UIColor colorWithRed:components.rgb.r green:components.rgb.g blue:components.rgb.b alpha:components.a];
-      } else {
+      } else if (components.mode == MODE_HSB) {
         color = [UIColor colorWithHue:components.hsb.h saturation:components.hsb.s brightness:components.hsb.b alpha:components.a];
       }
     }
