@@ -173,7 +173,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
 - (void)reactSetFrame:(CGRect)frame
 {
   [super reactSetFrame:frame];
-  if (self.image == nil) {
+  if (!self.image || self.image == _defaultImage) {
     [self reloadImage];
   } else if ([RCTImageLoader isAssetLibraryImage:_src] || [RCTImageLoader isRemoteImage:_src]) {
 
